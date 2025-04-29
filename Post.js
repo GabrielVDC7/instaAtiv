@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, StyleSheet, Text, Image, TouchableOpacity, Pressable} from 'react-native';
+import { View, StyleSheet, Text, Image, TouchableOpacity, Pressable, Animated} from 'react-native';
 
 
 class Post extends Component {
@@ -14,6 +14,9 @@ class Post extends Component {
         this.like = this.like.bind(this);
         this.lastTap = null;
         this.handleDoubleTap = this.handleDoubleTap.bind(this);
+        this.scaleAnim = new Animated.Value(0);
+        this.opacityAnim = new Animated.Value(0);
+
 
     }
 
@@ -64,9 +67,30 @@ class Post extends Component {
       
         if (this.lastTap && (now - this.lastTap) < DOUBLE_TAP_DELAY) {
           this.like(); 
+          this.startLikeAnimation();
         }
         this.lastTap = now;
       }
+
+      startLikeAnimation() {
+        this.scaleAnim.setValue(0);
+        this.opacityAnim.setValue(1);
+      
+        Animated.parallel([
+          Animated.timing(this.scaleAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(this.opacityAnim, {
+            toValue: 0,
+            delay: 500,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+      
       
       
     render() {
@@ -75,8 +99,21 @@ class Post extends Component {
       <View style={styles.areaPost}>
         <Text style={styles.usuario}>{this.props.data.usuario}</Text>
         <Pressable onPress={this.handleDoubleTap}>
+          <View style={styles.imageContainer}>
             <Image style={styles.imagem} source={{ uri: this.props.data.imagem }} />
-        </Pressable>
+          <Animated.Image
+          source={require('./assets/likeada.png')}
+           style={[
+          styles.animatedHeart,
+        {
+          transform: [{ scale: this.scaleAnim }],
+          opacity: this.opacityAnim,
+        }
+      ]}
+    />
+       </View>
+      </Pressable>
+
 
         <Text style={styles.textoPost}>{this.props.data.textoPost}</Text>
         <View style={styles.areaBtn}>
@@ -113,7 +150,7 @@ const styles = StyleSheet.create({
   },
   imagem: {
     height: 300,
-    width: '50',
+    width: '100%',
     borderRadius: 10,
   },
   textoPost: {
@@ -148,7 +185,21 @@ const styles = StyleSheet.create({
   },
   like: {
     color: '#FFF',
-  }
+  },
+
+  imageContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+
+animatedHeart: {
+  position: 'absolute',
+  width: 100,
+  height: 100,
+  tintColor: 'white',
+},
+
 });
 
 export default Post;
